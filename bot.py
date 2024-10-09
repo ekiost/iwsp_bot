@@ -145,6 +145,11 @@ def main():
     application = Application.builder().token(API_TOKEN).build()
     job_queue = application.job_queue
 
+    # Initial job check to populate current_job_list 
+    check_job_list()
+    logger.info(f"Initial job check completed successfully with {len(current_job_list)} jobs")
+
+    # Schedule daily job
     date_time_1 = time(hour=4, minute=0, tzinfo=timezone.utc)
     date_time_2 = time(hour=16, minute=0, tzinfo=timezone.utc)
     job_queue.run_daily(notify_new_jobs, time=date_time_1, days=(0, 1, 2, 3, 4, 5, 6))
