@@ -151,7 +151,7 @@ def main():
 
     # Schedule hourly job to check for new jobs
     logger.info("Scheduling hourly job to check for new jobs")
-    job_queue.run_repeating(notify_new_jobs, interval=3600, first=0)
+    job_queue.run_repeating(notify_new_jobs, interval=3600)
     
     application.run_polling()
     logger.info("Application is running")
