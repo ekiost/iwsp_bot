@@ -132,7 +132,7 @@ async def notify_new_jobs(context: ContextTypes.DEFAULT_TYPE):
             f"👥 {job['number_of_vacancies']}\n"
         )
         try:
-            await context.bot.send_message(chat_id='@sitnofuture', text=message)
+            # await context.bot.send_message(chat_id='@sitnofuture', text=message)
             logger.info(f"Sent notification for job: {job['job_title']}")
             sleep(2)
         except Exception as e:
@@ -149,9 +149,9 @@ def main():
     check_job_list()
     logger.info(f"Initial job check completed successfully with {len(current_job_list)} jobs")
 
-    # Schedule hourly job to check for new jobs
-    logger.info("Scheduling hourly job to check for new jobs")
-    job_queue.run_repeating(notify_new_jobs, interval=3600)
+    # Schedule 10-min job to check for new jobs
+    logger.info("Scheduling job to check for new jobs every 10 minutes")
+    job_queue.run_repeating(notify_new_jobs, interval=600)
     
     application.run_polling()
     logger.info("Application is running")
