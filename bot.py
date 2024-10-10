@@ -149,13 +149,10 @@ def main():
     check_job_list()
     logger.info(f"Initial job check completed successfully with {len(current_job_list)} jobs")
 
-    # Schedule daily job
-    date_time_1 = time(hour=4, minute=0, tzinfo=timezone.utc)
-    date_time_2 = time(hour=16, minute=0, tzinfo=timezone.utc)
-    job_queue.run_daily(notify_new_jobs, time=date_time_1, days=(0, 1, 2, 3, 4, 5, 6))
-    job_queue.run_daily(notify_new_jobs, time=date_time_2, days=(0, 1, 2, 3, 4, 5, 6))
-    logger.info("Scheduled daily job")
-
+    # Schedule hourly job to check for new jobs
+    logger.info("Scheduling hourly job to check for new jobs")
+    job_queue.run_repeating(notify_new_jobs, interval=3600, first=0)
+    
     application.run_polling()
     logger.info("Application is running")
 
