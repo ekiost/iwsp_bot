@@ -108,9 +108,9 @@ def check_job_list():
     new_job_list = get_job_list()
     global current_job_list
     new_jobs = {job_id: job for job_id, job in new_job_list.items() if job_id not in current_job_list}
-    current_job_list = new_job_list
     if new_jobs:
         logger.info(f"Found {len(new_jobs)} new jobs")
+        current_job_list = new_job_list
     else:
         logger.info("No new jobs found")
     return new_jobs if new_jobs else None
@@ -132,7 +132,7 @@ async def notify_new_jobs(context: ContextTypes.DEFAULT_TYPE):
             f"👥 {job['number_of_vacancies']}\n"
         )
         try:
-            # await context.bot.send_message(chat_id='@sitnofuture', text=message)
+            await context.bot.send_message(chat_id='@sitnofuture', text=message)
             logger.info(f"Sent notification for job: {job['job_title']}")
             sleep(2)
         except Exception as e:
