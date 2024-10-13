@@ -97,6 +97,9 @@ def get_job_list():
         }
 
         logger.info(f"Retrieved {len(job_list)} jobs")
+        if (len(job_list) == 0):
+            logger.info("Retrieve job list again, as no job found")
+            get_job_list()
         return job_list
     except requests.RequestException as e:
         logger.error(f"Error in get_job_list: {str(e)}")
