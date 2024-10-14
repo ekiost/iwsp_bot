@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import time, timezone
 from time import sleep
 
 import requests
@@ -135,6 +134,7 @@ async def notify_new_jobs(context: ContextTypes.DEFAULT_TYPE):
             f"👥 {job['number_of_vacancies']}\n"
         )
         try:
+            # Replace chat_id with your own chat_id
             await context.bot.send_message(chat_id='@sitnofuture', text=message)
             logger.info(f"Sent notification for job: {job['job_title']}")
             sleep(2)
