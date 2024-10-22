@@ -72,13 +72,12 @@ def get_session_items():
         logger.info("Closed browser")
 
 
-def get_job_list():
+def get_job_list(initial=False):
     logger.info("Starting job list retrieval")
 
     session_items = get_session_items()
 
     url = f"https://mvw9e7kvt9.execute-api.ap-southeast-1.amazonaws.com/Prod?requestname=LoadJobDetailsStudentDashboard&studentId={session_items[0]}&accessLevelCondition="
-
     headers = {'apitoken': session_items[1]}
 
     try:
@@ -95,28 +94,53 @@ def get_job_list():
             } for job in response_json
         }
 
-        logger.info(f"Retrieved {len(job_list)} jobs")
-        if (len(job_list) == 0):
-            logger.info("Retrieve job list again, as no job found")
-            get_job_list()
+        if initial:
+            # On initial run, we keep trying until we get at least one job
+            while len(job_list) == 0:
+                logger.info("Initial API call returned no jobs, retrying...")
+                response = requests.post(url, headers=headers)
+                response.raise_for_status()
+                response_json = response.json()
+                job_list = {
+                    job['sit_jobpostingid']: {
+                        'job_title': job['sit_name'],
+                        'company_name': job['acc.name'],
+                        'allowance': job['sit_allowance@OData.Community.Display.V1.FormattedValue'],
+                        'number_of_vacancies': job['sit_numberofvacancies']
+                    } for job in response_jsoncd 
+                }
+            logger.info(f"Initial job list retrieval completed with {len(job_list)} jobs")
+        else:
+            # For subsequent runs, if no jobs are found, we return without updating
+            if len(job_list) == 0:
+                logger.info("Subsequent API call returned no jobs, keeping the current job list")
+                return {}
+
         return job_list
     except requests.RequestException as e:
         logger.error(f"Error in get_job_list: {str(e)}")
         return {}
 
-
 def check_job_list():
     logger.info("Checking for new jobs")
     new_job_list = get_job_list()
     global current_job_list
+
+    # If new_job_list is empty, we retain the current job list
+    if len(new_job_list) == 0:
+        logger.info("No new jobs found in API response")
+        return None
+
+    # Find new jobs that are not already in the current_job_list
     new_jobs = {job_id: job for job_id, job in new_job_list.items() if job_id not in current_job_list}
+    
     if new_jobs:
         logger.info(f"Found {len(new_jobs)} new jobs")
         current_job_list = new_job_list
     else:
         logger.info("No new jobs found")
+    
     return new_jobs if new_jobs else None
-
 
 async def notify_new_jobs(context: ContextTypes.DEFAULT_TYPE):
     logger.info("Starting job notification process")
@@ -141,24 +165,24 @@ async def notify_new_jobs(context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             logger.error(f"Error sending notification for job {job['job_title']}: {str(e)}")
 
-
 def main():
     logger.info("Starting application")
 
     application = Application.builder().token(API_TOKEN).build()
     job_queue = application.job_queue
 
-    # Initial job check to populate current_job_list 
-    check_job_list()
+    # Initial job check to populate current_job_list
+    check_job_list_initial = get_job_list(initial=True)
+    global current_job_list
+    current_job_list = check_job_list_initial
     logger.info(f"Initial job check completed successfully with {len(current_job_list)} jobs")
 
     # Schedule 10-min job to check for new jobs
     logger.info("Scheduling job to check for new jobs every 10 minutes")
     job_queue.run_repeating(notify_new_jobs, interval=600)
-    
+
     application.run_polling()
     logger.info("Application is running")
-
 
 if __name__ == "__main__":
     main()
