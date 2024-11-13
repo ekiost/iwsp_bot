@@ -7,6 +7,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.firefox.service import Service
 from telegram.ext import ContextTypes, Application
 
 # Set up logging
@@ -29,7 +30,8 @@ def get_session_items():
     try:
         options = webdriver.FirefoxOptions()
         options.add_argument("--headless")
-        driver = webdriver.Firefox(options=options)
+        service = Service(executable_path="/usr/bin/geckodriver")
+        driver = webdriver.Firefox(options=options, service=service)
         driver.get(url)
 
         wait = WebDriverWait(driver, 10)
