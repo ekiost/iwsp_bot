@@ -42,8 +42,6 @@ def get_session_items():
         sign_in_button.click()
         logger.info("Clicked initial sign-in button")
 
-        wait.until(ec.url_changes(driver.current_url))
-
         username = wait.until(ec.visibility_of_element_located((By.ID, "userNameInput")))
         username.send_keys(USER_NAME)
         logger.info("Entered username")
